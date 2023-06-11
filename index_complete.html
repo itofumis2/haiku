@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>myMemoPad</title>
+<script src="js/jquery-2.1.3.min.js"></script>
+<link rel="stylesheet" href="css/sample.css">
+</head>
+<body>
+<main>
+    <h2>俳句生成器</h2>
+
+    <input type="text" id="word" placeholder="登録したい単語">
+    <input type="number" id="phoneme" placeholder="音韻数">
+    <button onclick="storeWord()"> + </button>
+    <input type="text" id="wordToDelete" placeholder="削除したい単語">
+    <button onclick="deleteSpecificWord()">−</button>
+        <p id="haiku"></p>
+   <br>
+        <button onclick="generateHaiku()">詠む</button>
+   <br> 
+    <button onclick="saveHaiku()">撰ぶ</button>
+
+<br>
+    <ul id="savedHaikus"></ul>
+<!-- <li id="clear">Clear</li> -->
+
+
+</main>
+
+<script>
+function storeWord() {
+    let word = document.getElementById("word").value;
+    let phoneme = document.getElementById("phoneme").value;
+
+    let existingWords = JSON.parse(localStorage.getItem("words")) || [];
+
+    existingWords.push({ word: word, phoneme: Number(phoneme) });
+
+    localStorage.setItem("words", JSON.stringify(existingWords));
+}
+
+function generateHaiku() {
+    let haiku = [];
+    let syllableStructure = [5, 7, 5];
+    let words = JSON.parse(localStorage.getItem("words")) || [];
+
+    for (let i = 0; i < syllableStructure.length; i++) {
+        let suitableWords = words.filter(word => word.phoneme === syllableStructure[i]);
+
+        if (suitableWords.length === 0) {
+            alert("適切な単語が見つからないため、俳句を生成できません。");
+            return;
+        }
+
+        let randomWord = suitableWords[Math.floor(Math.random() * suitableWords.length)];
+        haiku.push(randomWord.word);
+
+        // 行の終わりに到達したら、改行タグを追加
+        if (i < syllableStructure.length - 1) {
+            haiku.push('<br>');
+        }
+    }
+
+    document.getElementById("haiku").innerHTML = haiku.join(' '); // innerHTMLを使います。
+}
+
+
+function deleteSpecificWord() {
+    let wordToDelete = document.getElementById("wordToDelete").value;
+    let words = JSON.parse(localStorage.getItem("words"));
+
+    let index = words.findIndex(word => word.word === wordToDelete);
+
+    if (index !== -1) {
+        words.splice(index, 1);
+    }
+    localStorage.setItem("words", JSON.stringify(words));
+}
+
+function saveHaiku() {
+    let currentHaiku = document.getElementById("haiku").innerText;
+    let existingHaikus = JSON.parse(localStorage.getItem("haikus")) || [];
+
+    existingHaikus.push(currentHaiku);
+    localStorage.setItem("haikus", JSON.stringify(existingHaikus));
+    displaySavedHaikus();
+}
+
+function displaySavedHaikus() {
+    let savedHaikus = JSON.parse(localStorage.getItem("haikus")) || [];
+    let haikuList = document.getElementById("savedHaikus");
+    haikuList.innerHTML = '';
+
+    for (let haiku of savedHaikus) {
+        let listItem = document.createElement("li");
+        listItem.innerText = haiku.replace(/\n/g, ' ');
+        haikuList.appendChild(listItem);
+    }
+}
+
+// ページが読み込まれたときに保存された俳句を表示
+window.onload = displaySavedHaikus;
+
+
+// $("#clear").on("click",function(){
+//     localStorage.clear();
+//     $("#list").empty();
+// });
+
+</script>
+
+</body>
+</html>
